@@ -1,4 +1,4 @@
-# gee_export_utils
+# gee_export
 
 A package for exporting and downloading Earth Engine images.
 
