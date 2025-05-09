@@ -89,11 +89,12 @@ def download_image_tiles(image, region, scale, crs='EPSG:4326', output_dir='./',
 import pandas as pd
 import numpy as np
 def export_time_series_to_df(
-    collection, 
-    band_names, 
-    region=None, 
-    scale=1000, 
-    reducer='mean'):
+    collection,
+    band_names,
+    region=None,
+    scale=1000,
+    reducer='mean',
+    roi=ee.Geometry.Rectangle([-180, -90, 180, 90])):
     """
     Convert Earth Engine image collection to pandas DataFrame with reducer option.
 
@@ -108,7 +109,7 @@ def export_time_series_to_df(
     pd.DataFrame: A pandas DataFrame containing the time series data.
     """
     if region is None:
-    region = roi  # Ensure you have defined roi in your script
+        region = roi  # Ensure you have defined roi in your script
 
     # Select reducer
     if reducer == 'mean':
@@ -199,13 +200,3 @@ def export_time_series_to_drive(
     )
     task.start()
     print(f"📤 Export task for {export_filename} started.")
-
-
-
-
-
-
-
-
-
-
