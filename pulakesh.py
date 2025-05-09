@@ -153,25 +153,15 @@ def export_time_series_to_df(
 ## Export time series to Google Drive as CSV
 def export_time_series_to_drive(
     collection, 
-    *,
     region, 
     scale=1000, 
     export_folder='RGEE', 
     export_filename='lst_day_monthly',
-    reducer='mean'):
+    reducer='mean'
+):
     """
     Extracts time series as FeatureCollection and exports to Google Drive as CSV.
-
-    Args:
-        collection (ee.ImageCollection): The Earth Engine image collection to process.
-        region (ee.Geometry): Region to clip the images.
-        scale (int): Resolution in meters for the reducer.
-        export_folder (str): Google Drive folder to save the exported CSV.
-        export_filename (str): Name of the exported CSV file.
-        reducer (str): Reducer to apply. Options: 'mean', 'sum', 'min', 'max', 'median'.
-
-    Returns:
-        None
+    Supports reducer options: 'mean', 'sum', 'min', 'max', 'median'.
     """
     # Select reducer
     if reducer == 'mean':
@@ -190,7 +180,6 @@ def export_time_series_to_drive(
     def extract(img):
         stats = img.reduceRegion(ee_reducer, region, scale, maxPixels=1e13)
         return ee.Feature(None, stats).set('date', img.date().format('YYYY-MM-dd'))
-    
     timeseries_fc = collection.map(extract)
     task = ee.batch.Export.table.toDrive(
         collection=timeseries_fc,
@@ -200,4 +189,5 @@ def export_time_series_to_drive(
         fileFormat='CSV'
     )
     task.start()
-    print(f"📤 Export task for {export_filename} started.")
+    print(f"Export task for {export_filename} started.")
+
