@@ -7,14 +7,14 @@ A package for exporting and downloading Earth Engine images.
 To install the package, run:
 
 ```
-pip install git+https://github.com/pulakeshpradhan/geepack.git
+pip install git+https://github.com/pulakeshpradhan/export_earth.git
 ```
 ## Import Libraris 
 
 ```
-from export_utils import export_image_to_drive
-from export_utils import download_image_single
-from export_utils import download_image_tiles
+from pulakesh import export_image_to_drive
+from pulakesh import download_image_single
+from pulakesh import download_image_tiles
 ```
 
 

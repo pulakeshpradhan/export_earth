@@ -1,6 +1,6 @@
 import ee
 import geemap
-from gee_export_utils import export_image_to_drive, download_image_single, download_image_tiles
+from pulakesh import export_image_to_drive, download_image_single, download_image_tiles
 
 # Initialize Earth Engine
 try:
