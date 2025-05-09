@@ -84,3 +84,128 @@ def download_image_tiles(image, region, scale, crs='EPSG:4326', output_dir='./',
         scale=scale
     )
     print(f"📥 Image tiles saved to: {tiles_dir}")
+
+## Export time series to pandas DataFrame
+import pandas as pd
+import numpy as np
+def export_time_series_to_df(
+    collection, 
+    band_names, 
+    region=None, 
+    scale=1000, 
+    reducer='mean'):
+    """
+    Convert Earth Engine image collection to pandas DataFrame with reducer option.
+
+    Args:
+    collection (ee.ImageCollection): The Earth Engine image collection to process.
+    band_names (list): List of band names to include in the DataFrame.
+    region (ee.Geometry, optional): Region to clip the images. Defaults to global 'roi' if None.
+    scale (int): Resolution in meters for the reducer.
+    reducer (str): Reducer to apply. Options: 'mean', 'sum', 'min', 'max', 'median'.
+
+    Returns:
+    pd.DataFrame: A pandas DataFrame containing the time series data.
+    """
+    if region is None:
+    region = roi  # Ensure you have defined roi in your script
+
+    # Select reducer
+    if reducer == 'mean':
+        ee_reducer = ee.Reducer.mean()
+    elif reducer == 'sum':
+        ee_reducer = ee.Reducer.sum()
+    elif reducer == 'min':
+        ee_reducer = ee.Reducer.min()
+    elif reducer == 'max':
+        ee_reducer = ee.Reducer.max()
+    elif reducer == 'median':
+        ee_reducer = ee.Reducer.median()
+    else:
+        raise ValueError(f"Unsupported reducer: {reducer}")
+
+    def extract(img):
+        stats = img.reduceRegion(ee_reducer, region, scale, maxPixels=1e13)
+        return ee.Feature(None, stats).set('date', img.get('system:time_start'))
+
+    features = collection.map(extract)
+    data = features.getInfo()['features']
+
+    # Convert the extracted data to a pandas DataFrame
+    df = pd.DataFrame([
+        {'date': pd.to_datetime(f['properties']['date'], unit='ms'),
+         **{k: v for k, v in f['properties'].items() if k != 'date'}}
+        for f in data
+    ])
+
+    # Add missing bands
+    for band in band_names:
+        if band not in df.columns:
+            df[band] = np.nan
+
+    return df
+
+
+
+
+
+## Export time series to Google Drive as CSV
+def export_time_series_to_drive(
+    collection, 
+    region, 
+    scale=1000, 
+    export_folder='RGEE', 
+    export_filename='lst_day_monthly',
+    reducer='mean'):
+    """
+    Extracts time series as FeatureCollection and exports to Google Drive as CSV.
+
+    Args:
+        collection (ee.ImageCollection): The Earth Engine image collection to process.
+        region (ee.Geometry): Region to clip the images.
+        scale (int): Resolution in meters for the reducer.
+        export_folder (str): Google Drive folder to save the exported CSV.
+        export_filename (str): Name of the exported CSV file.
+        reducer (str): Reducer to apply. Options: 'mean', 'sum', 'min', 'max', 'median'.
+
+    Returns:
+        None
+    """
+    # Select reducer
+    if reducer == 'mean':
+        ee_reducer = ee.Reducer.mean()
+    elif reducer == 'sum':
+        ee_reducer = ee.Reducer.sum()
+    elif reducer == 'min':
+        ee_reducer = ee.Reducer.min()
+    elif reducer == 'max':
+        ee_reducer = ee.Reducer.max()
+    elif reducer == 'median':
+        ee_reducer = ee.Reducer.median()
+    else:
+        raise ValueError(f"Unsupported reducer: {reducer}")
+
+    def extract(img):
+        stats = img.reduceRegion(ee_reducer, region, scale, maxPixels=1e13)
+        return ee.Feature(None, stats).set('date', img.date().format('YYYY-MM-dd'))
+    
+    timeseries_fc = collection.map(extract)
+    task = ee.batch.Export.table.toDrive(
+        collection=timeseries_fc,
+        description=f'{export_filename}_CSV',
+        folder=export_folder,
+        fileNamePrefix=export_filename,
+        fileFormat='CSV'
+    )
+    task.start()
+    print(f"📤 Export task for {export_filename} started.")
+
+
+
+
+
+
+
+
+
+
